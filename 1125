@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+<head>
+  <meta charset="utf-8">
+  <title>產品策略分析</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <style>
+    body { font-family: 'Microsoft JhengHei', sans-serif; margin: 0; padding: 20px; background-color: #f8fafc; }
+    .controls { margin-bottom: 20px; display: flex; gap: 10px; justify-content: center; }
+    button { padding: 8px 16px; border: 1px solid #ccc; background: white; cursor: pointer; border-radius: 20px; font-weight: bold; transition: all 0.3s; }
+    button:hover { background: #e2e8f0; }
+    button.active { background: #1e293b; color: white; border-color: #1e293b; }
+    #chart-container { height: 500px; width: 100%; background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); padding: 20px; box-sizing: border-box; }
+  </style>
+</head>
+<body style="height: 100%; margin: 0">
+  <div class="controls">
+    <button onclick="updateData('2024')" id="btn-2024">2024 年度</button>
+    <button onclick="updateData('2025')" id="btn-2025">2025 (10/30)</button>
+    <button onclick="updateData('total')" id="btn-total" class="active">合計</button>
+  </div>
+  <div id="chart-container"></div>
+
+  <script type="text/javascript">
+    var dom = document.getElementById('chart-container');
+    var myChart = echarts.init(dom);
+    var option;
+
+    // 真實數據
+    const rawData = [
+      { name: 'F8T+F2T雙向雙搖(加厚)', market: 'RT', strategy: '核心', margin: 0.3170, rev2024: 157154945, rev2025: 180028955, total: 337183900 },
+      { name: 'F8單向搖頭梅開', market: 'RT', strategy: '核心', margin: 0.2114, rev2024: 107630720, rev2025: 130430798, total: 238061518 },
+      { name: 'F1單向梅開', market: 'MJ', strategy: '增強', margin: 0.2825, rev2024: 56707821, rev2025: 30701970, total: 87409791 },
+      { name: 'F8單向棘輪雙圓', market: 'MJ', strategy: '核心', margin: 0.3363, rev2024: 41064248, rev2025: 21392883, total: 62457131 },
+      { name: 'F1單向單棘輪雙圓', market: 'RT', strategy: '核心', margin: 0.1770, rev2024: 30727508, rev2025: 25805836, total: 56533344 },
+      { name: 'F4雙向梅開', market: 'MJ', strategy: '增強', margin: 0.2644, rev2024: 11708011, rev2025: 18833708, total: 30541719 },
+      { name: 'F8單向搖頭(配電盤)', market: 'MJ', strategy: '核心', margin: 0.4088, rev2024: 18389154, rev2025: 8097246, total: 26486400 },
+      { name: 'F8單向雙搖雙圓', market: 'MJ', strategy: '增強', margin: 0.2673, rev2024: 16705728, rev2025: 10155883, total: 26861611 },
+      { name: 'F2雙向梅開', market: 'WDIM', strategy: '突破', margin: 0.3557, rev2024: 16394336, rev2025: 8877326, total: 25271662 },
+      { name: 'F1單向雙圓', market: 'Truck', strategy: '一般', margin: 0.0001, rev2024: 4412741, rev2025: 7803557, total: 12216298 },
+      { name: 'F8單向雙截式雙圓', market: 'MJ', strategy: '核心', margin: 0.4999, rev2024: 8604557, rev2025: 1144335, total: 9748892 },
+      { name: 'F2雙向雙圓', market: 'IND', strategy: '突破', margin: 0.2888, rev2024: 4141221, rev2025: 2600108, total: 6741329 },
+      { name: 'F8單向雙截式梅開', market: 'WDIM', strategy: '一般', margin: 0.3604, rev2024: 4605124, rev2025: 1229215, total: 5834339 },
+      { name: 'F8+F2雙向雙搖', market: 'WDIM', strategy: '增強', margin: 0.3552, rev2024: 903051, rev2025: 3323325, total: 4226376 },
+      { name: 'GW雙向雙圓', market: 'WDIM', strategy: '一般', margin: 0.1214, rev2024: 2119407, rev2025: 1717046, total: 3836453 },
+      { name: 'F8+F2雙向單搖', market: 'FA', strategy: '增強', margin: 0.0733, rev2024: 1360450, rev2025: 985400, total: 2345850 },
+      { name: 'F3雙向梅開', market: '國內', strategy: '一般', margin: 0.1600, rev2024: 1258800, rev2025: 875100, total: 2133900 },
+      { name: '75度雙向雙圓', market: 'WDIM', strategy: '一般', margin: 0.3664, rev2024: 1105746, rev2025: 70320, total: 1176066 },
+      { name: 'F9單向定位', market: '停產', strategy: '一般', margin: 0.0001, rev2024: 728715, rev2025: 327195, total: 1055910 },
+      { name: '鋁柄+BIT', market: 'WDIM', strategy: '增強', margin: 0.0630, rev2024: 485040, rev2025: 534060, total: 1019100 },
+      { name: 'F1單向無開口', market: '國內', strategy: '一般', margin: 0.5662, rev2024: 560160, rev2025: 320000, total: 880160 },
+      { name: 'Gearless', market: '國內', strategy: '一般', margin: 0.4884, rev2024: 174600, rev2025: 0, total: 174600 },
+    ];
+
+    const strategyColors = {
+      '核心': '#2563eb', '增強': '#16a34a', '突破': '#ea580c', '一般': '#94a3b8'
+    };
+
+    function getOption(mode) {
+      const data = rawData.map(item => {
+        const val = mode === '2024' ? item.rev2024 : mode === '2025' ? item.rev2025 : item.total;
+        return [item.margin, val, item.name, item.market, item.strategy, item.rev2024, item.rev2025];
+      });
+
+      return {
+        tooltip: {
+          trigger: 'item',
+          formatter: function (params) {
+            const p = params.data;
+            const growth = p[6] - p[5];
+            const growthRate = (growth / p[5] * 100).toFixed(1);
+            const growthHtml = mode !== '2024' ? `<br/><span style="color:${growth > 0 ? 'green' : 'red'}">${growth > 0 ? '▲' : '▼'} 成長: ${growthRate}%</span>` : '';
+            
+            return `<div style="font-weight:bold">${p[2]}</div>
+                    <div style="font-size:12px;color:#666">${p[3]} | ${p[4]}</div>
+                    <hr style="margin:5px 0;border:0;border-top:1px solid #eee"/>
+                    營收: $${(p[1]/1000000).toFixed(2)}M<br/>
+                    毛利: ${(p[0]*100).toFixed(2)}%
+                    ${growthHtml}`;
+          }
+        },
+        xAxis: { 
+          name: '毛利率', 
+          min: 0, max: 0.6,
+          axisLabel: { formatter: (val) => (val * 100).toFixed(0) + '%' }
+        },
+        yAxis: { 
+          name: '營收',
+          axisLabel: { formatter: (val) => (val / 1000000).toFixed(0) + 'M' }
+        },
+        grid: { right: 50, top: 50, bottom: 30, left: 60 },
+        series: [{
+          type: 'scatter',
+          symbolSize: function (data) {
+            // 根據營收調整氣泡大小，最小10，最大40
+            const size = Math.sqrt(data[1]) / 800; 
+            return Math.max(10, Math.min(size, 50));
+          },
+          data: data,
+          itemStyle: {
+            color: function(params) {
+              return strategyColors[params.data[4]] || '#94a3b8';
+            },
+            shadowBlur: 10,
+            shadowColor: 'rgba(0, 0, 0, 0.2)'
+          }
+        }]
+      };
+    }
+
+    function updateData(mode) {
+      document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn-' + mode).classList.add('active');
+      myChart.setOption(getOption(mode), { notMerge: false, lazyUpdate: false });
+    }
+
+    // Init
+    myChart.setOption(getOption('total'));
+    
+    window.addEventListener('resize', myChart.resize);
+  </script>
+</body>
+</html>
