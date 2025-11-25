@@ -81,6 +81,8 @@
         },
         xAxis: { 
           name: '毛利率', 
+          nameLocation: 'middle',
+          nameGap: 30,
           min: 0, max: 0.6,
           axisLabel: { formatter: (val) => (val * 100).toFixed(0) + '%' }
         },
@@ -88,11 +90,14 @@
           name: '營收',
           axisLabel: { formatter: (val) => (val / 1000000).toFixed(0) + 'M' }
         },
-        grid: { right: 50, top: 50, bottom: 30, left: 60 },
+        grid: { right: 50, top: 50, bottom: 80, left: 60 }, // 底部空間加大
+        legend: {
+          bottom: 0,
+          data: ['核心 (Core)', '增強 (Enhance)', '突破 (Breakthrough)', '一般/未分類']
+        },
         series: [{
           type: 'scatter',
           symbolSize: function (data) {
-            // 根據營收調整氣泡大小，最小10，最大40
             const size = Math.sqrt(data[1]) / 800; 
             return Math.max(10, Math.min(size, 50));
           },
@@ -114,9 +119,7 @@
       myChart.setOption(getOption(mode), { notMerge: false, lazyUpdate: false });
     }
 
-    // Init
     myChart.setOption(getOption('total'));
-    
     window.addEventListener('resize', myChart.resize);
   </script>
 </body>
